@@ -5,16 +5,12 @@ from PIL import Image
 import closestcolorname
 
 
-def avg_img_color(img):
+def color_scan(img):
     """
-    Calculate average of individual red, green and blue colors.
+    Calculate top 2 occurring colors.
     @param img: Actual RGB image
-    @return int, int, int: Three average integer values of red, green and blue pixels respectively.
+    @return int[]: RGB values of 2 highest occurring colors
     """
-
-    # In progress: Calculate top 2 occurring colors
-    # @param img: actual rgb image
-    # @return object, object: 2 highest occurring colors
 
     width, height = img.size
     r_list = []
@@ -25,26 +21,22 @@ def avg_img_color(img):
     final_g = []
     final_b = []
 
-    each_pixel = []
-    pixel_list = []
-    pixel_totals = []
-
-
-    # Compute total count of red, green and blue color pixel.
+    # Create array with every pixel in the image.
     for x in range(0, width):
         for y in range(0, height):
             r, g, b = img.getpixel((x,y))
             r_list.append(r)
             g_list.append(g)
             b_list.append(b)
-            each_pixel.append(img.getpixel((x,y)))
 
+    # Makeshift queue. Always get the first RGB combo. Check for other similar colored pixels
     while len(r_list) != 0:
         pointer = 0
         count = 0
         final_r.append(r_list[pointer])
         final_g.append(g_list[pointer])
         final_b.append(b_list[pointer])
+        # Iterate list. If I find a similar pixel, count it and delete it. Else leave it
         while pointer != len(r_list):
             if abs(final_r[len(final_r)-1] - r_list[pointer]) < 11 and \
             abs(final_g[len(final_g)-1] - g_list[pointer]) < 11 and \
@@ -57,40 +49,16 @@ def avg_img_color(img):
                 pointer+=1
         totals.append(count)
 
-    print("R List ", final_r)
-    print("G List ", final_g)
-    print("B List ", final_b)
-    print("Counts ", totals)
-
+    # Get the RGB combo with the highest count in the list. Delete it run again to get the secondary color
     first = final_r[totals.index(max(totals))], final_g[totals.index(max(totals))], final_b[totals.index(max(totals))]
-    print(first)
     del final_r[totals.index(max(totals))], final_g[totals.index(max(totals))], final_b[totals.index(max(totals))]
     second = final_r[totals.index(max(totals))], final_g[totals.index(max(totals))], final_b[totals.index(max(totals))]
-    print(second)
-    # Get a pixel from list. Count how often something like it shows up
-    # while len(each_pixel) != 0:
-    #     my_pixel = each_pixel[0]
-    #     count = each_pixel.count(my_pixel)
-    #     print("Current count", count)
-    #     for x in range(0, count):
-    #         del each_pixel[each_pixel.index(my_pixel)]
-    #     pixel_list.append(my_pixel)
-    #     pixel_totals.append(count)
-
-        #r, g, b = my_pixel
-        #for x in range(0, len(each_pixel)):
-         #   this_r, this_g, this_b = each_pixel(x)
-
-    # print(pixel_list)
-    # print(pixel_totals)
-    # comp = (255, 255, 255)
-    # print(pixel_list.count(comp))
     return first[0], first[1], first[2], second[0], second[1], second[2]
 
 
 def closest_color(most_color):
     """
-    To find actual color name. If actual color name is unknown then derive closest one. 
+    Find closest derived color names.
     @param most_color: 
     @return first_color_name:
     @return second_color_name:
@@ -103,29 +71,45 @@ def closest_color(most_color):
     b2 = int(most_color[5])
     first = (r1, g1, b1)
     second = (r2, g2, b2)
-    print "RGB ", first, " and ", second
+    print "Colors in RGB:", first, "and", second
     first_color_name = closestcolorname.get_colour_name(first)
     second_color_name = closestcolorname.get_colour_name(second)
 
     return first_color_name, second_color_name
 
 
+def get_comp(c_color):
+    """
+    Finding complimentary colors
+    @param c_color:
+    @return colors:
+    """
+    colors = [255-c_color[0], 255-c_color[1], 255-c_color[2], 255-c_color[3], 255-c_color[4], 255-c_color[5]]
+
+    return colors
+
+
 def commute_result(img):
     """
-    Converting image of any form to RGB image and print result.
+    Converting image of any form to RGB image get 2 highest used colors and print result.
     @param img: 
     """
     img = img.convert('RGB')
-    most_color = avg_img_color(img)
+    most_color = color_scan(img)
     color_names = closest_color(most_color)
-    print "The primary colors in your image are ", color_names[0]
+    print "The primary colors in your image are", color_names[0], "and", color_names[1]
+
+    c_color = get_comp(most_color)
+    color_names = closest_color(c_color)
+    print "The complimentary colors in your image are", color_names[0], "and", color_names[1]
 
 
-# The redball.jpg image has a red colored ball with white background. Hence, closest color name is derived as
-# lightcoral. light coral has approx 94% red, 50% green and 50% blue.
-# img = Image.open("redball.jpg")
+# The blue_white_dot.png image is a blue field with a little white and red in it
+# It comes in the package as a demo file to input
 # commute_result(img)
 
-# While the red.png is a fully red colored image. Hence, red color is derived.
-img = Image.open("blue_white_dot.png")
+my_file = raw_input("Enter Image to be scanned: ")
+print(my_file)
+
+img = Image.open(my_file)
 commute_result(img)

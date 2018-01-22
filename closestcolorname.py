@@ -29,4 +29,4 @@ def get_colour_name(requested_colour):
     except ValueError:
         closest_name = closest_colour(requested_colour)
         actual_name = None
-    return actual_name, closest_name
+    return closest_name
